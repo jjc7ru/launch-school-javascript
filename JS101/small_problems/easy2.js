@@ -149,10 +149,56 @@ console.log(stringToSignedInteger("-570") === -570); // logs true
 console.log(stringToSignedInteger("+100") === 100); // logs true
 
 
+// (11)
+
+function integerToString(integer) {
+  if (integer === 0) {
+    return '0';
+  }
+
+  const d = {0: '0', 1: '1', 2: '2', 3: '3', 4: '4', 5: '5', 6: '6', 7: '7', 8: '8', 9: '9'};
+  let out = '';
+  let div = integer;
+  let mod = 0;
+
+  while (div > 0) {
+    mod = div % 10;
+    div = parseInt(div / 10);
+    out += d[mod];
+  }
+  out = out.split('').reverse().join('');
+  return out;
+}
+
+console.log(integerToString(4321));        // "4321"
+console.log(integerToString(0));           // "0"
+console.log(integerToString(5000));        // "5000"
+console.log(integerToString(1234567890));  // "1234567890"
 
 
+// (12)
 
+function signedIntegerToString(integer) {
+  if (integer === 0) {
+    return '0';
+  }
 
+  let isNegative = false;
+  if (integer < 0) {
+    isNegative = true;
+    integer *= -1;
+  }
+  
+  let out = integerToString(integer);
+  if (isNegative) {
+    return '-' + out;
+  }
+  return '+' + out;
+}
+
+console.log(signedIntegerToString(4321) === "+4321");
+console.log(signedIntegerToString(-123) === "-123");
+console.log(signedIntegerToString(0) === "0");
 
 
 
