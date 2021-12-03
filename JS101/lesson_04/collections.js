@@ -27,3 +27,76 @@ console.log(numbers);
 // Verify that concat doesn't change the original string
 console.log(str.concat(' on the other side'));
 console.log(str);
+
+
+/* 07 Selection and Transformation */
+
+// Extracting To Functions
+let produce = {
+  apple: 'Fruit',
+  carrot: 'Vegetable',
+  pear: 'Fruit',
+  broccoli: 'Vegetable'
+};
+
+function selectFruit(obj, val) {
+  let keys = Object.keys(obj);
+  let filteredObj = {};
+
+  for (let i = 0; i < keys.length; i++) {
+    let value = obj[keys[i]];
+    if (value === val) {
+      filteredObj[keys[i]] = value;
+    }
+  }
+  return filteredObj;
+}
+
+console.log(selectFruit(produce, 'Fruit')); // => { apple: 'Fruit', pear: 'Fruit' }
+
+
+// Here's an exercise for you: suppose we wanted to transform the numbers based on
+// their position in the array rather than their value? Try coding a solution that 
+// doubles the numbers that have odd indices:
+
+function doubleOddIndex(numbers) {
+  let oddIndexDoubled = [];
+  for (let i = 0; i < numbers.length; i++) {
+    if (i % 2 !== 0) {
+      oddIndexDoubled.push(numbers[i] * 2);
+    } else {
+      oddIndexDoubled.push(numbers[i]);
+    }
+  }
+  return oddIndexDoubled;
+}
+
+let myNumbers = [1, 4, 3, 7, 2, 6];
+console.log(doubleOddIndex(myNumbers));
+console.log(myNumbers);
+
+// Try coding a function that lets you multiply every array item by a specified value.
+// As with doubleNumbers, don't mutate the array, but return a new array instead.
+
+function multiply(numbers, multiplier) {
+  let multiplied = [];
+  for (let number of numbers) {
+    multiplied.push(number * multiplier);
+  }
+  return multiplied;
+}
+
+console.log(multiply(myNumbers, 3)); // => [3, 12, 9, 21, 6, 18]
+
+
+
+
+
+
+
+
+
+
+
+
+
