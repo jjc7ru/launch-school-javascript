@@ -243,11 +243,65 @@ function cleanUp(string) {
 
 console.log(cleanUp("---what's my +*& line?"));    // " what s my line "
 
+// (10)
+// Write a function that takes a year as input and returns the century. 
+// The return value should be a string that begins with the century number,
+// and ends with 'st', 'nd', 'rd', or 'th' as appropriate for that number.
+
+function century(year) {
+  let centuryString = {0: 'th', 1: 'st', 2: 'nd', 3: 'rd'};
+  if (year <= 100) {
+    return '1st';
+  }
+
+  let centuryDigit = calculateCentury(year); 
+  let strCentury = String(centuryDigit);
+  if (strCentury.length < 2) {
+    if (centuryString.hasOwnProperty(strCentury)) {
+      return strCentury + centuryString[strCentury];
+    }
+    return strCentury + 'th';
+  }
+
+  let lastTwoCenturyDigits = strCentury.slice(-2);
+  let lastCenturyDigit = strCentury.slice(-1);
+  let endsWithEdgeCases = false;
+  if (lastTwoCenturyDigits === '11' || 
+      lastTwoCenturyDigits === '12' || 
+      lastTwoCenturyDigits === '13') {
+    endsWithEdgeCases = true;
+  }
+
+  if (endsWithEdgeCases) {
+    return strCentury + 'th';
+  }
+  return strCentury + centuryString[lastCenturyDigit];
 
 
+  function calculateCentury(year) {
+    let strYear = String(year);
+    let lastTwoDigits = strYear.slice(-2);
+    let centuryDigit = -1;
 
+    if (Number(lastTwoDigits)) {
+      centuryDigit = parseInt(year / 100) + 1;
+    } else {
+      centuryDigit = parseInt(year / 100);
+    }
+    return centuryDigit;
+  }
 
+}
 
+console.log(century(2000));        // "20th"
+console.log(century(2001));        // "21st"
+console.log(century(1965));        // "20th"
+console.log(century(256));         // "3rd"
+console.log(century(5));           // "1st"
+console.log(century(10103));       // "102nd"
+console.log(century(1052));        // "11th"
+console.log(century(1127));        // "12th"
+console.log(century(11201));       // "113th"
 
 
 
