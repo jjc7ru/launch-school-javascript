@@ -37,13 +37,12 @@ let points = {
 function chooseRandomCard(deck) {
   if (Object.keys(deck).length === 0) {
     prompt("No more cards in the deck");
-    return;
+    return [];
   }
   let cards = Object.keys(deck);
   let index = Math.floor(Math.random() * cards.length);
   let card = cards[index];
   deck[card]--;
-  
   if (deck[card] === 0) {
     delete deck[card];
   }
@@ -59,7 +58,7 @@ function dealCards(deck) {
   let dealerCards = [];
   let dealToPlayer = false;
 
-  for (let i = 0; i < CARD_NUMBER; i++) {
+  for (let _ = 0; _ < CARD_NUMBER; _++) {
     let card = chooseRandomCard(deck);
     if (dealToPlayer) {
       playerCards.push(card[0]);
@@ -85,11 +84,11 @@ function arrayToMessage(array, sep) {
   if (array.length === 2) {
     return `${array[0]} ${sep} ${array[1]}`;
   } else {
-    for (let i = 0; i < array.length; i++) {
-      if (i !== array.length - 1) {
-        message += String(array[i]) + ', ';
+    for (let idx = 0; idx < array.length; idx++) {
+      if (idx !== array.length - 1) {
+        message += String(array[idx]) + ', ';
       } else {
-        message += sep + ' ' + String(array[i]);
+        message += sep + ' ' + String(array[idx]);
       }
     }
   }
@@ -97,7 +96,7 @@ function arrayToMessage(array, sep) {
 }
 
 
-// Calculates the total if both cards are Aces or has no Aces. 
+// Calculates the total if both cards are Aces or has no Aces.
 function calcTotal(cards) {
   if (cards[0] === 'A' && cards[1] === 'A') {
     return [12];
@@ -151,10 +150,11 @@ function addCardRecalcTotal(total, card) {
     return [total[0] + points[card[0]]];
   } else if (total.length > 1 && card[0] === 'A') {
     return [total[0] + ACE_VALUES[0], total[0] + ACE_VALUES[1],
-            total[1] + ACE_VALUES[0], total[1] + ACE_VALUES[1]];
+      total[1] + ACE_VALUES[0], total[1] + ACE_VALUES[1]];
   } else if (total.length > 1 && card[0] !== 'A') {
     return [total[0] + points[card[0]], total[1] + points[card[0]]];
   }
+  return [];
 }
 
 // Get final total value in number
@@ -189,7 +189,7 @@ function dealAndCalculateTotal(who, cards, total) {
   } else {
     prompt(`You have: ${arrayToMessage(cards, 'and')}`);
   }
-  
+
   total = addCardRecalcTotal(total, card);
   if (total.length > 1) {
     total = filterTotal(total);
@@ -200,11 +200,26 @@ function dealAndCalculateTotal(who, cards, total) {
   } else {
     prompt(`Your total is ${displayTotal(total)}`);
   }
- 
 
   return total;
 }
 
+
+// checks the winner with player total and dealer total
+function checkWinner(playerFinalTotal, dealerFinalTotal) {
+  if (dealerFinalTotal > 21) {
+    prompt("Dealer Busts. Player Wins!");
+    return;
+  }
+
+  if (playerFinalTotal < dealerFinalTotal) {
+    prompt(`${playerFinalTotal} < ${dealerFinalTotal}; Dealer Wins!`);
+  } else if (playerFinalTotal > dealerFinalTotal) {
+    prompt(`${playerFinalTotal} > ${dealerFinalTotal}; Player Wins!`);
+  } else if (playerFinalTotal === dealerFinalTotal) {
+    prompt(`${playerFinalTotal} === ${dealerFinalTotal}; Its a Tie!`);
+  }
+}
 
 
 // Main function
@@ -240,7 +255,7 @@ function play() {
     if (playerFinalTotal > 21) {
       prompt('Player Busts! Dealer Wins!');
       return;
-    };
+    }
 
     prompt(`Please choose: Hit or Stay`);
     answer = readline.question();
@@ -259,7 +274,6 @@ function play() {
     checkWinner(playerFinalTotal, dealerFinalTotal);
     return;
   }
-  
 
   while (dealerTotal[0] < 17) {
     dealerTotal = dealAndCalculateTotal('dealer', dealerCards, dealerTotal);
@@ -270,21 +284,8 @@ function play() {
   checkWinner(playerFinalTotal, dealerFinalTotal);
 }
 
-function checkWinner(playerFinalTotal, dealerFinalTotal) {
-  if (dealerFinalTotal > 21) {
-    prompt("Dealer Busts. Player Wins!");
-    return;
-  }
 
-  if (playerFinalTotal < dealerFinalTotal) {
-    prompt(`${playerFinalTotal} < ${dealerFinalTotal}; Dealer Wins!`);
-  } else if (playerFinalTotal > dealerFinalTotal) {
-    prompt(`${playerFinalTotal} > ${dealerFinalTotal}; Player Wins!`);
-  } else if (playerFinalTotal === dealerFinalTotal) {
-    prompt(`${playerFinalTotal} === ${dealerFinalTotal}; Its a Tie!`);
-  } 
-}
-
+// Execute
 let playing = true;
 while (playing) {
   console.clear();
@@ -295,7 +296,5 @@ while (playing) {
     playing = false;
   }
 }
-
-
 
 
