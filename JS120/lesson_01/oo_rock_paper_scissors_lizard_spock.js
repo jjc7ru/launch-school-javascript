@@ -1,3 +1,6 @@
+/* eslint-disable max-statements */
+/* eslint-disable max-lines-per-function */
+
 const readline = require('readline-sync');
 
 
@@ -26,7 +29,8 @@ function createHuman() {
 
       this.move = choice;
     },
-  }
+  };
+
   return Object.assign(playerObject, humanObject);
 }
 
@@ -38,7 +42,7 @@ function createComputer() {
     choose(strategy) {
       this.move = strategy;
     },
-  }
+  };
 
   return Object.assign(playerObject, computerObject);
 }
@@ -63,11 +67,13 @@ function createRule() {
     humanWins(humanMove, computerMove) {
       let moves = gameChoice.choices[humanMove];
 
-      return ((humanMove === 'rock' && (computerMove === moves[0] || computerMove === moves[1])) ||
+      return (
+        (humanMove === 'rock' && (computerMove === moves[0] || computerMove === moves[1])) ||
         (humanMove === 'paper' && (computerMove === moves[0] || computerMove === moves[1])) ||
         (humanMove === 'scissors' && (computerMove === moves[0] || computerMove === moves[1])) ||
         (humanMove === 'lizard' && (computerMove === moves[0] || computerMove === moves[1])) ||
-        (humanMove === 'spock' && (computerMove === moves[0] || computerMove === moves[1]))) 
+        (humanMove === 'spock' && (computerMove === moves[0] || computerMove === moves[1]))
+      );
     },
 
     determineWinner(humanScore, computerScore) {
@@ -93,24 +99,42 @@ function createStrategy() {
       let randomIndex = Math.floor(Math.random() * array.length);
       return array[randomIndex];
     },
-    
-    // use human move statistics to determine move for computer
+
+    // use move statistics to determine move for computer
     probability(moveStatistics) {
+      console.log(moveStatistics);
+
       const WINS_PERCENTAGE = 0.1;
 
-      let currMove = this.random(gameChoice.choicesArr);
+      for (let choice of gameChoice.choicesArr) {
+        let winRate = moveStatistics[choice][moveStatistics[choice].length - 1];
+        let choicePlayedNoTies = moveStatistics[choice][2];
+        let playerWinRate = choicePlayedNoTies ? (1 - winRate) : 0;
+        if (playerWinRate > WINS_PERCENTAGE) {
+          gameWeight.updateWeight(choice, 0.1, 'decrease');
 
-      let playerMostPlayed = moveStatistics[currMove][0];
-      let playerWinRate = moveStatistics[currMove][3];
-      
-      if (playerWinRate > WINS_PERCENTAGE) {
-        gameWeight.updateWeight(currMove);
-        let weight = gameWeight.getWeight();
-        currMove = this.chooseFromWeight(weight);
-      } else {
-        currMove = this.counterMostPlayed(moveStatistics);
+          let move1 = gameChoice.choicesReverse[choice][0];
+          let move2 = gameChoice.choicesReverse[choice][1];
+          let intersection = this.chooseIntersection(move1, move2);
+          console.log(intersection);
+          gameWeight.updateWeight(intersection, 0.1, 'increase');
+        }
       }
+
+      let weight = gameWeight.getWeight();
+      console.log(weight);
+      let currMove = this.chooseFromWeight(weight);
+      gameWeight.resetWeight();
       return currMove;
+    },
+
+    chooseIntersection(move1, move2) {
+      let arr1 = gameChoice.choicesReverse[move1];
+      let arr2 = gameChoice.choicesReverse[move2];
+
+      if (arr1[0] === arr2[0] || arr1[0] === arr2[1]) return arr1[0];
+      if (arr1[1] === arr2[0] || arr1[1] === arr2[1]) return arr1[1];
+      return '';
     },
 
     chooseFromWeight(weight) {
@@ -122,25 +146,53 @@ function createStrategy() {
           return choice;
         }
       }
+      return gameChoice.choicesArr[gameChoice.choicesArr.length - 1];
     },
 
-    // Using move statistics, get the most played move of human player
-    // and then choose a move that beats it.
-    counterMostPlayed(moveStatistics) {
-      let majorityFound = false;
-      let [majorityMove, majorityCount] = ['', 0];
-      for (let [key, value] of Object.entries(moveStatistics)) {
-        if (value[0] > majorityCount) {
-          majorityMove = key;
-          majorityFound = true;
-        }
-      }
-      if (majorityFound) {
-        let beatingMoves = gameChoice.choicesReverse[majorityMove];
-        return this.random(beatingMoves);
-      }
-      return this.random(gameChoice.choicesArr);
+  };
+}
+
+function createMoveStatistics() {
+  return {
+    // Index 0: Number of times computer played current move
+    // Index 1: Number of times computer won with current move
+    // Index 2: Number of times current move was played total (excluding ties)
+    // Index 3: Win rate of computer with current move
+    moves: {
+      rock: [0, 0, 0, 0],
+      paper: [0, 0, 0, 0],
+      scissors: [0, 0, 0, 0],
+      lizard: [0, 0, 0, 0],
+      spock: [0, 0, 0, 0],
     },
+
+    timesComputerPlayedMove(move) {
+      this.moves[move][0]++;
+    },
+
+    timesComputerWonWithMove(move, winner) {
+      if (winner === 'computer') {
+        this.moves[move][1]++;
+      }
+    },
+
+    timesPlayed(move, winner) {
+      if (winner !== 'tie') {
+        this.moves[move][2]++;
+      }
+    },
+
+    calculateWinRate(move) {
+      if (this.moves[move][2] === 0) {
+        return;
+      }
+      this.moves[move][3] = this.moves[move][1] / this.moves[move][2];
+    },
+
+    getMoveStatistics() {
+      return this.moves;
+    },
+
   };
 }
 
@@ -156,18 +208,31 @@ function createWeight() {
       spock: .2,
     },
 
-    updateWeight(move) {
-      const DECREASE_PERCENTAGE = 0.1;
+    updateWeight(move, percent, direction) {
       const NUMBER_OF_CHOICES = 5;
-
       let prevWeight = this.weights[move];
-      this.weights[move] *= (1 - DECREASE_PERCENTAGE);
-      let difference = prevWeight - this.weights[move];
-      let increaseWeightBy = (difference / (NUMBER_OF_CHOICES - 1));
+      let difference;
+      let increaseWeightBy;
 
-      for (let choice of gameChoice.choicesArr) {
-        if (choice !== move) {
-          this.weights[choice] += increaseWeightBy;
+      if (direction === 'decrease') {
+        this.weights[move] *= (1 - percent);
+        difference = prevWeight - this.weights[move];
+        increaseWeightBy = (difference / (NUMBER_OF_CHOICES - 1));
+
+        for (let choice of gameChoice.choicesArr) {
+          if (choice !== move) {
+            this.weights[choice] += increaseWeightBy;
+          }
+        }
+      } else if (direction === 'increase') {
+        this.weights[move] *= (1 + percent);
+        difference =  this.weights[move] - prevWeight;
+        increaseWeightBy = (difference / (NUMBER_OF_CHOICES - 1));
+
+        for (let choice of gameChoice.choicesArr) {
+          if (choice !== move) {
+            this.weights[choice] -= increaseWeightBy;
+          }
         }
       }
     },
@@ -175,6 +240,17 @@ function createWeight() {
     getWeight() {
       return this.weights;
     },
+
+    resetWeight() {
+      this.weights = {
+        rock: .2,
+        paper: .2,
+        scissors: .2,
+        lizard: .2,
+        spock: .2,
+      };
+    },
+
   };
 }
 
@@ -189,7 +265,7 @@ function createGameChoice() {
       lizard: ['spock', 'paper'],
       spock: ['rock', 'scissors'],
     },
-    
+
     // (eg. rock loses to spock and paper)
     choicesReverse: {
       rock: ['spock', 'paper'],
@@ -235,8 +311,7 @@ function createScoreboard() {
     getComputerScore() {
       return this.computerScore;
     },
-   
-    // reset the score
+
     resetScore() {
       this.humanScore = 0;
       this.computerScore = 0;
@@ -250,7 +325,7 @@ function createGameFunction() {
       let answer = readline.question();
       return answer.toLowerCase()[0] === 'y';
     }
-  }
+  };
 }
 
 function createMessage() {
@@ -277,16 +352,15 @@ function createMessage() {
 
     displayWinner(winner) {
       if (winner === 'tie') {
-        console.log("It's a tie!");
+        console.log("\nIt's a tie!\n");
         return;
       }
       winner = winner.slice(0, 1).toUpperCase() + winner.slice(1);
-      console.log(`${winner} won!`);
+      console.log(`\n${winner} won!\n`);
     },
 
     displayScore(humanScore, computerScore) {
-      console.log(`Player Score: ${humanScore}`);
-      console.log(`Computer Score: ${computerScore}`);
+      this.createDisplayScoreboard(humanScore, computerScore);
     },
 
     displayPlayAgainMessage() {
@@ -298,6 +372,7 @@ function createMessage() {
     },
 
     displayRoundWinner(humanScore, computerScore) {
+
       if (humanScore > computerScore) {
         console.log('\nRound Winner: Human!');
       } else {
@@ -306,9 +381,23 @@ function createMessage() {
     },
 
     displayFinalWinner(humanScore, computerScore) {
+      this.createDisplayScoreboard(humanScore, computerScore);
+
+      if (humanScore > computerScore) {
+        console.log('\nFinal Winner: Human!');
+      } else {
+        console.log('\nFinal Winner: Computer!');
+      }
+    },
+
+    createDisplayScoreboard(humanScore, computerScore) {
       let s1 = ' Human: ' + String(humanScore) + ' ';
       let s2 = ' Computer: ' + String(computerScore) + ' ';
-      let lengthDifference = Math.max(s2.length - s1.length, s1.length - s2.length);
+
+      let lengthDifference = Math.max(
+        s2.length - s1.length,
+        s1.length - s2.length
+      );
 
       let width = '+' + '-'.repeat(Math.max(s1.length, s2.length)) + '+';
       let heightHuman = '|' + s1 + ' '.repeat(lengthDifference)  + '|';
@@ -318,61 +407,11 @@ function createMessage() {
       console.log(heightHuman);
       console.log(heightComputer);
       console.log(width);
-      
-      if (humanScore > computerScore) {
-        console.log('\nFinal Winner: Human!');
-      } else {
-        console.log('\nFinal Winner: Computer!');
-      }
-    }
-
-  };
-}
-
-function createMoveStatistics() {
-  return {
-    /* [number of times human played current move, 
-     *  number of times human won with current move,
-     *  number of times current move was played total (excluding ties),
-     *  win rate of human with current move]
-     */
-     moves: {
-      rock: [0, 0, 0, 0],
-      paper: [0, 0, 0, 0],
-      scissors: [0, 0, 0, 0],
-      lizard: [0, 0, 0, 0],
-      spock: [0, 0, 0, 0],
-    },
-
-    timesHumanPlayedMove(move) {
-      this.moves[move][0]++;
-    },
-
-    timesHumanWonWithMove(move, winner) {
-      if (winner === 'human') {
-        this.moves[move][1]++;
-      }
-    },
-
-    timesPlayed(move, winner) {
-      if (winner !== 'tie') {
-        this.moves[move][2]++;
-      }
-    },
-
-    calculateWinRate(move) {
-      if (this.moves[move][2] === 0) {
-        return;
-      }
-      this.moves[move][3] = this.moves[move][1] / this.moves[move][2];
-    },
-
-    getMoveStatistics() {
-      return this.moves;
     },
 
   };
 }
+
 
 const RPSGame = {
   human: createHuman(),
@@ -385,7 +424,7 @@ const RPSGame = {
   rule: createRule(),
   gameFunction: createGameFunction(),
   move: createMoveStatistics(),
-  
+
   play() {
     console.clear();
 
@@ -394,14 +433,15 @@ const RPSGame = {
     this.message.displayWelcomeMessage();
 
     while (true) {
-      while (this.score.getHumanScore() < NUMBER_OF_GAMES && 
+      while (this.score.getHumanScore() < NUMBER_OF_GAMES &&
              this.score.getComputerScore() < NUMBER_OF_GAMES) {
         this.message.displayChoicesMessage();
         this.human.choose();
         let humanMove = this.human.move;
-        
-        //let computerStrategy = this.strategy.random(this.gameChoice.choicesArr);
-        let computerStrategy = this.strategy.probability(this.move.getMoveStatistics());
+
+        let computerStrategy = this.strategy.probability(
+          this.move.getMoveStatistics()
+        );
 
         this.computer.choose(computerStrategy);
         let computerMove = this.computer.move;
@@ -411,34 +451,44 @@ const RPSGame = {
 
         let winner = this.rule.compare(humanMove, computerMove);
 
-        this.move.timesHumanPlayedMove(humanMove);
-        this.move.timesHumanWonWithMove(humanMove, winner);
-        this.move.timesPlayed(humanMove, winner);
-        this.move.calculateWinRate(humanMove)
+        this.move.timesComputerPlayedMove(computerMove);
+        this.move.timesComputerWonWithMove(computerMove, winner);
+        this.move.timesPlayed(computerMove, winner);
+        this.move.calculateWinRate(computerMove);
 
         this.message.displayWinner(winner);
         this.score.updateScore(winner);
 
-        this.message.displayScore(this.score.getHumanScore(), this.score.getComputerScore());
-      };
+        this.message.displayScore(
+          this.score.getHumanScore(),
+          this.score.getComputerScore()
+        );
+      }
 
-      this.message.displayRoundWinner(this.score.getHumanScore(), this.score.getComputerScore());
+      this.message.displayRoundWinner(
+        this.score.getHumanScore(),
+        this.score.getComputerScore()
+      );
 
-      let roundWinner = this.rule.determineWinner(this.score.getHumanScore(), 
-                                                  this.score.getComputerScore());
+      let roundWinner = this.rule.determineWinner(
+        this.score.getHumanScore(),
+        this.score.getComputerScore()
+      );
 
       this.overallScore.updateScore(roundWinner);
 
       this.message.displayPlayAgainMessage();
       if (this.gameFunction.playAgain()) {
-          this.score.resetScore();
+        this.score.resetScore();
       } else {
         break;
       }
     }
-  
-    this.message.displayFinalWinner(this.overallScore.getHumanScore(), 
-                                    this.overallScore.getComputerScore());
+
+    this.message.displayFinalWinner(
+      this.overallScore.getHumanScore(),
+      this.overallScore.getComputerScore()
+    );
 
     this.message.displayGoodbyeMessage();
   },
