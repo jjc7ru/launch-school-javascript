@@ -165,7 +165,7 @@ class TTTGame {
 
     while (true) {
       let validChoices = this.board.unusedSquares();
-      let choices = this.joinOr(validChoices, ',', 'or');
+      let choices = this.joinOr(validChoices);
       let prompt = `Choose a square ${choices}: `;
       choice = readline.question(prompt);
       if (validChoices.includes(choice)) break;
@@ -176,7 +176,7 @@ class TTTGame {
     this.board.markSquareAt(choice, this.human.getMarker());
   }
 
-  joinOr(arr, delimeter, conjunction) {
+  joinOr(arr, delimeter = ',', conjunction = 'or') {
     if (arr.length === 1) {
       return arr.join();
     }
