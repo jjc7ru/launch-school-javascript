@@ -162,17 +162,34 @@ class TTTGame {
 
   humanMoves() {
     let choice;
+
     while (true) {
       let validChoices = this.board.unusedSquares();
-      const prompt = `Choose a square ${validChoices.join(', ')}: `;
+      let choices = this.joinOr(validChoices, ',', 'or');
+      let prompt = `Choose a square ${choices}: `;
       choice = readline.question(prompt);
-
       if (validChoices.includes(choice)) break;
 
       console.log("Sorry, that's not a valid choice");
       console.log("");
     }
     this.board.markSquareAt(choice, this.human.getMarker());
+  }
+
+  joinOr(arr, delimeter, conjunction) {
+    if (arr.length === 1) {
+      return arr.join();
+    }
+
+    let prompt = '';
+    for (let idx = 0; idx < arr.length; idx++) {
+      if (idx === arr.length - 1) {
+        prompt += conjunction + ' ' + arr[idx];
+      } else {
+        prompt += arr[idx] + delimeter + ' ';
+      }
+    }
+    return prompt;
   }
 
   computerMoves() {
