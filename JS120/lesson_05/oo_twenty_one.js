@@ -5,6 +5,7 @@ class Card {
   }
 
   getCard() {
+    // gets the value of the card
     return this.card;
   }
 
@@ -22,12 +23,14 @@ class Card {
   }
 
   getCardCount() {
-    // gets the number of cards left
+    // gets the number of remaining cards
     return this.numberOfCards;
   }
 }
 
 class Deck {
+  static CARDS = ['2', '3', '4', '5', '6', '7', '8', '9', 'J', 'Q', 'K', 'A'];
+
   constructor() {
     this.deck = {};
     this.shuffle();
@@ -35,42 +38,43 @@ class Deck {
 
   shuffle() {
     // creates deck
-    const CARDS = ['2', '3', '4', '5', '6', '7', '8', '9', 'J', 'Q', 'K', 'A'];
-    for (let card of CARDS) {
+    for (let card of Deck.CARDS) {
       this.deck[card] = new Card(card);
     }
   }
 
   getDeck() {
+    // gets the deck
     return this.deck;
   }
 
+  availableCards() {
+    // gets an array of available cards - it returns the string representation
+    // of the card. It DOES NOT return the Card Object.
+    return CARDS.filter(card => this.deck[card].getCardCount() > 0);
+  }
 
   deal() {
-    //STUB
-    // does the dealer or the deck deal?
+    // deals a random card object
+    let cards = this.availableCards();
+    let index = Math.floor(Math.random() * cards.length);
+    let selectedCard = cards[index];
+    return this.deck[selectedCard];
   }
 }
 
-let d = new Deck();
-console.log(d.getDeck()['4'].getCard());
-
-
-
-
-
-
-
-
-
-
-/*
 class Participant {
   constructor() {
+    this.cards = [];
+    this.score = 0;
+  }
+
+  hit() {
+
+  }
+
+  stay() {
     //STUB
-    // What sort of state does a participant need?
-    // Score? Hand? Amount of money available?
-    // What else goes here? all the redundant behaviors from Player and Dealer?
   }
 }
 
@@ -99,10 +103,8 @@ class Player extends Participant {
 }
 
 class Dealer extends Participant {
-  // Very similar to a Player; do we need this?
-
   constructor() {
-    //STUB
+    // STUB
     // What sort of state does a dealer need?
     // Score? Hand? Deck of cards? Bow tie?
   }
@@ -192,4 +194,4 @@ class TwentyOneGame {
 
 let game = new TwentyOneGame();
 game.start();
-*/
+
