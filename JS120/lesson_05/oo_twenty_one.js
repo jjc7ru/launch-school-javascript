@@ -6,11 +6,15 @@ class Card {
 
   getCard() {
     // gets the value of the card
+    // (ie) new Card('5') --> '5'
     return this.card;
   }
 
+  
+
   getScore() {
     // gets the score of a card
+    // (ie) new Card('4') --> [4]; new Card('A') --> [1, 11]
     const SCORE = [parseInt(this.card)];
     const ACE_VALUE = [1, 11];
     const JQK_VALUE = [10];
@@ -21,45 +25,60 @@ class Card {
     }
     return SCORE;
   }
-
-  getCardCount() {
-    // gets the number of remaining cards
-    return this.numberOfCards;
-  }
 }
 
 class Deck {
   static CARDS = ['2', '3', '4', '5', '6', '7', '8', '9', 'J', 'Q', 'K', 'A'];
 
   constructor() {
+    this.cards = {};
     this.deck = {};
-    this.shuffle();
+    this.mapCards(); // {'2': new Card('2'), ... 'A': new Card('A')}
+    this.shuffle();  // {'2': 4, ... 'A': 4}; 
   }
 
-  shuffle() {
-    // creates deck
+  mapCards() {
+    // creates cards template 
+    // (ie) {'2': new Card('2'), ... 'A': new Card('A')}
     for (let card of Deck.CARDS) {
-      this.deck[card] = new Card(card);
+      this.cards[card] = new Card(card);
     }
   }
 
-  getDeck() {
-    // gets the deck
-    return this.deck;
+  shuffle() {
+    // creates 52 card deck
+    // (ie) {'2': 4, ... 'A': 4}
+    const NUMBER_OF_CARDS_PER_CARD = 4;
+    for (let card of Deck.CARDS) {
+      this.deck[card] = NUMBER_OF_CARDS_PER_CARD;
+    }
+  }
+
+  getCards() {
+    // gets the cards 
+    // (ie) {'2': new Card('2'), ... 'A': new Card('A')}
+    return this.cards;
+  }
+
+  getCardCount(card) {
+    // gets the number of remaining cards for a given card
+    // (ie) getCardCount('5') ---> 4
+    return this.deck[card];
   }
 
   availableCards() {
-    // gets an array of available cards - it returns the string representation
-    // of the card. It DOES NOT return the Card Object.
-    return CARDS.filter(card => this.deck[card].getCardCount() > 0);
+    // gets an array of available cards. The card count has to be greater than 0.
+    // (ie) ['2', '3', ... ]
+    return Deck.CARDS.filter(card => this.deck[card] > 0);
   }
 
   deal() {
     // deals a random card object
+    // (ie) new Card('5')
     let cards = this.availableCards();
     let index = Math.floor(Math.random() * cards.length);
     let selectedCard = cards[index];
-    return this.deck[selectedCard];
+    return this.cards[selectedCard];
   }
 }
 
@@ -67,30 +86,21 @@ class Participant {
   constructor() {
     this.cards = [];
     this.score = 0;
+    this.hit = false;
   }
 
   hit() {
-
+    this.hit = true;
   }
 
   stay() {
-    //STUB
+    this.hit = false;
   }
 }
 
 class Player extends Participant {
   constructor() {
-    //STUB
-    // What sort of state does a player need?
-    // Score? Hand? Amount of money available?
-  }
-
-  hit() {
-    //STUB
-  }
-
-  stay() {
-    //STUB
+    super();
   }
 
   isBusted() {
@@ -104,17 +114,7 @@ class Player extends Participant {
 
 class Dealer extends Participant {
   constructor() {
-    // STUB
-    // What sort of state does a dealer need?
-    // Score? Hand? Deck of cards? Bow tie?
-  }
-
-  hit() {
-    //STUB
-  }
-
-  stay() {
-    //STUB
+    this.deck = new Deck();
   }
 
   isBusted() {
