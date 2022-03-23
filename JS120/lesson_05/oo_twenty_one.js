@@ -121,7 +121,17 @@ class Participant {
       }
     }
     return output;
+  }
 
+  getScore() {
+    // returns the higher of the two value (if different else returns one) 
+    // from the current score
+    // (ie) this.score = [1, 11] ---> getScore() ---> 11
+    // (ie) this.score = [15, 15] ---> getScore() ---> 15
+    if (this.score[1] > this.score[0]) {
+      return this.score[1];
+    }
+    return this.score[0];
   }
 
   getCleanScore() {
