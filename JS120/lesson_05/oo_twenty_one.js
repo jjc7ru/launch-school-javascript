@@ -1,16 +1,9 @@
+const readline = require('readline-sync');
+
 class Card {
   constructor(card) {
     this.card = card;
-    this.numberOfCards = 4;
   }
-
-  getCard() {
-    // gets the value of the card
-    // (ie) new Card('5') --> '5'
-    return this.card;
-  }
-
-  
 
   getScore() {
     // gets the score of a card
@@ -24,6 +17,11 @@ class Card {
       return ACE_VALUE;
     }
     return SCORE;
+  }
+
+  toString() {
+    // (ie) new Card('5') --> '5'
+    return this.card;
   }
 }
 
@@ -84,17 +82,62 @@ class Deck {
 
 class Participant {
   constructor() {
-    this.cards = [];
-    this.score = 0;
-    this.hit = false;
+    this.hand = [];
+    this.score = [0, 0];
   }
 
-  hit() {
-    this.hit = true;
+  updateScore(card) {
+    // Updates the score with the given card object
+    // (ie) updateScore(new Card('5')) --> this.score = [5, 5]
+    // (ie) updateScore(new Card('A')) --> this.score = [1, 11]
+    let cardScore = card.getScore();
+    if (cardScore.length === 1) {
+      this.score[0] += cardScore[0];
+      this.score[1] += cardScore[0];
+    } else {
+      this.score[0] += cardScore[0];
+      this.score[1] += cardScore[1];
+    }
   }
 
-  stay() {
-    this.hit = false;
+  isBusted() {
+    // if both scores are greater than 21, return true else false
+    return this.score[0] > 21 && this.score[1] > 21;
+  }
+
+  prettyPrint(arr, delimeter='', conjunction='') {
+    let output = '';
+    if (arr.length === 1) {
+      return arr[0];
+    } else if (arr.length === 2) {
+      return arr[0] + ' ' + conjunction + ' ' + arr[1];
+    }
+
+    for (let idx = 0; idx < this.hand.length; idx++) {
+      if (idx === arr.length - 1) {
+        output += conjunction + ' ' + arr[idx];
+      } else {
+        output += arr[idx] + delimeter + ' ';
+      }
+    }
+    return output;
+
+  }
+
+  getCleanScore() {
+    // returns a cleaned version of this.score
+    // (ie) Card is 5: this.score = [5, 5] --> getCleanScore() --> [5]
+    // (ie) Card is A: this.score = [1, 11] --> getCleanScore() --> [1, 11]
+    if (this.score[0] === this.score[1]) {
+      return this.prettyPrint([this.score[0]]);
+    }
+    return this.prettyPrint(this.score, '', 'or');
+  }
+
+  getLastDealtCard() {
+    // returns the last dealt card
+    // (ie) this.hand = ['A', '2', '5'] --> '5'
+    return this.hand[this.hand.length - 1];
   }
 }
 
@@ -103,26 +146,25 @@ class Player extends Participant {
     super();
   }
 
-  isBusted() {
-    //STUB
-  }
-
-  score() {
-    //STUB
+  getInitialHand() {
+    // Initial hand always contain two cards for player
+    return this.hand[0] + ' and ' + this.hand[1];
   }
 }
 
 class Dealer extends Participant {
   constructor() {
+    super();
     this.deck = new Deck();
   }
 
-  isBusted() {
-    //STUB
+  deal(participant) {
+    participant.hand.push(this.deck.deal());
   }
 
-  score() {
-    //STUB
+  getInitialHand() {
+    // Initial hand always contain two cards where one is hidden
+    return this.hand[0] + ' and a hidden card.';
   }
 
   hide() {
@@ -132,14 +174,9 @@ class Dealer extends Participant {
   reveal() {
     //STUB
   }
-
-  deal() {
-    //STUB
-    // does the dealer or the deck deal?
-  }
 }
 
-class MessageCenter {
+class StaticMessageCenter {
 
   displayWelcomeMessage() {
     console.log("Welcome to the game of Twenty-One!");
@@ -147,7 +184,7 @@ class MessageCenter {
 
   displayGoodbyeMessage() {
     console.log("Thank you for playing. Goodbye!");
-  }  
+  }
 }
 
 class TwentyOneGame {
@@ -155,37 +192,63 @@ class TwentyOneGame {
     this.player = new Player();
     this.dealer = new Dealer();
     this.deck = new Deck();
-    this.messages = new MessageCenter();
+    this.messages = new StaticMessageCenter();
   }
 
   start() {
-    //SPIKE
-    this.displayWelcomeMessage();
+    this.messages.displayWelcomeMessage();
     this.dealCards();
-    this.showCards();
+    this.showInitialCards();
     this.playerTurn();
-    this.dealerTurn();
-    this.displayResult();
-    this.displayGoodbyeMessage();
+    //this.dealerTurn();
+    //this.displayResult();
+    this.messages.displayGoodbyeMessage();
   }
 
   dealCards() {
-    //STUB
+    this.dealer.deal(this.player);
+    this.player.updateScore(this.player.getLastDealtCard());
+    
+    this.dealer.deal(this.dealer);
+    this.dealer.updateScore(this.dealer.getLastDealtCard());
+    
+    this.dealer.deal(this.player);
+    this.player.updateScore(this.player.getLastDealtCard());
+
+    this.dealer.deal(this.dealer);
+    this.dealer.updateScore(this.dealer.getLastDealtCard());
   }
 
-  showCards() {
-    //STUB
+  showInitialCards() {
+    console.log(`Your Cards: ${this.player.getInitialHand()}`);
+    console.log(`Dealer Cards: ${this.dealer.getInitialHand()}`);
+    console.log(`Your Score: ${this.player.getCleanScore()}`);
   }
 
   playerTurn() {
-    //STUB
+    while (true) {
+      let hit = readline.question("Hit (y/n)? ");
+      if (hit === 'y') {
+        this.dealer.deal(this.player);
+        this.player.updateScore(this.player.getLastDealtCard());
+        console.log(`Your cards are: ${this.player.prettyPrint(this.player.hand, ',', 'and')}`);
+        console.log(`Your current score: ${this.player.getCleanScore()}`);
+        if (this.player.isBusted()) {
+          console.log("You bust!");
+          break;
+        }
+      } else if (hit === 'n') {
+        console.log("Your score: " + this.player.getScore());
+        break
+      } else {
+        console.log("Invalid input. Please choose between (y/n).");
+      }
+    }
   }
 
   dealerTurn() {
     //STUB
   }
-
-  
 
   displayResult() {
     //STUB
