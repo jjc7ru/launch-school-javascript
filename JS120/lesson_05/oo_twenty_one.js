@@ -124,6 +124,12 @@ class Participant {
   }
 
   getScore() {
+    // returns the raw score
+    // (ie) [5, 15]
+    return this.score;
+  }
+
+  getHigherScore() {
     // returns the higher of the two value (if different else returns one) 
     // from the current score
     // (ie) this.score = [1, 11] ---> getScore() ---> 11
@@ -132,6 +138,7 @@ class Participant {
       return this.score[1];
     }
     return this.score[0];
+
   }
 
   getCleanScore() {
@@ -257,7 +264,6 @@ class TwentyOneGame {
   }
 
   dealerTurn() {
-    //STUB
   }
 
   displayResult() {
