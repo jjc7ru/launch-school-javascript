@@ -26,8 +26,8 @@ class Card {
 }
 
 class Deck {
-  //static CARDS = ['2', '3', '4', '5', '6', '7', '8', '9', 'J', 'Q', 'K', 'A'];
-  static CARDS = ['A', '2', '3'];
+  static CARDS = ['2', '3', '4', '5', '6', '7', '8', '9', 'J', 'Q', 'K', 'A'];
+  //static CARDS = ['J', 'A'];
 
   constructor() {
     this.cards = {};
@@ -75,8 +75,14 @@ class Deck {
     // deals a random card object
     // (ie) new Card('5')
     let cards = this.availableCards();
+    if (cards.length === 0) {
+      MessageCenter.outOfCards();
+      this.shuffle();
+      cards = this.availableCards();
+    }
     let index = Math.floor(Math.random() * cards.length);
     let selectedCard = cards[index];
+    this.deck[selectedCard] -= 1;
     return this.cards[selectedCard];
   }
 }
@@ -86,6 +92,7 @@ class Participant {
     this.hand = [];
     this.score = [0, 0];
     this.finalScore = [];
+    this.bust = false;
   }
 
   updateScore(card) {
@@ -94,7 +101,7 @@ class Participant {
     // (ie) this.score = [0, 0] --> updateScore(new Card('A')) --> this.score = [1, 11]
     // (ie) this.score = [4, 14] --> updateScore(new Card('A')) --> this.score = [5, 15]
     // (ie) this.score = [20, 30] --> updateScore(new Card('A')) --> this.score = [21, 21]
-    // (ie) this.score = [21, 31] --> updateScore(new Card('A')) --> this.score = []
+    // (ie) this.score = [21, 31] --> updateScore(new Card('5')) --> this.score = []
     let cardScore = card.getScore();
     if (cardScore.length === 1) {
       this.score[0] += cardScore[0];
@@ -134,22 +141,25 @@ class Participant {
   getHigherScore() {
     // returns the higher of the two value (if different else returns one) 
     // from the current score
-    // (ie) this.score = [5] ---> getScore() ---> 5
-    // (ie) this.score = [1, 11] ---> getScore() ---> 11
-    // (ie) this.score = [15, 15] ---> getScore() ---> 15
+    // (ie) this.score = [5] ---> getScore() ---> [5]
+    // (ie) this.score = [1, 11] ---> getScore() ---> [11]
+    // (ie) this.score = [15, 15] ---> getScore() ---> [15]
     if (this.score.length === 1) {
-      return this.score[0];
+      return [this.score[0]];
     }
 
     if (this.score[1] > this.score[0]) {
-      return this.score[1];
+      return [this.score[1]];
     }
-    return this.score[0];
+    return [this.score[0]];
   }
 
   isBusted() {
     // if both scores are greater than 21, return true else false
-    return this.score[0] > 21 && this.score[1] > 21;
+    //return this.score[0] > 21 && this.score[1] > 21;
+    if (this.score[0] > 21 && this.score[1] > 21 || this.score.length === 0) {
+      this.bust = true;
+    }
   }
 
   getLastDealtCard() {
@@ -161,23 +171,47 @@ class Participant {
   updateFinalScore() {
     // updates the final score
     // (ie) this.score = [10, 20] --> updateFinalScore() --> [20]
-    this.finalScore = [this.getHigherScore(this.score)];
+    if (this.score.length >= 2) {
+      this.finalScore = this.getHigherScore(this.score);
+    } else {
+      this.finalScore = this.score;
+    }
   }
 
   getFinalScore() {
     // returns the final score
     return this.finalScore;
   }
+
+  reset() {
+    this.hand = [];
+    this.score = [0, 0];
+    this.finalScore = [];
+    this.bust = false;
+  }
 }
 
 class Player extends Participant {
   constructor() {
     super();
+    this.chips = 5;
   }
 
   getInitialHand() {
     // Initial hand always contain two cards for player
     return this.hand[0] + ' and ' + this.hand[1];
+  }
+
+  incrementChips() {
+    this.chips += 1;
+  }
+
+  decrementChips() {
+    this.chips -= 1;
+  }
+
+  isBroke() {
+    return this.chips < 1;
   }
 }
 
@@ -263,21 +297,21 @@ class MessageCenter {
     this.scoreboard = new ScoreBoard();
   }
 
-  displayWelcomeMessage() {
+  static displayWelcomeMessage() {
     console.log("Welcome to the game of Twenty-One!");
   }
 
-  displayGoodbyeMessage() {
+  static displayGoodbyeMessage() {
     console.log("Thank you for playing. Goodbye!");
   }
 
-  displayInitialCards(player, dealer) {
+  static displayInitialCards(player, dealer) {
     console.log('');
     console.log(`Your Cards: ${player.getInitialHand()}`);
     console.log(`Dealer Cards: ${dealer.getInitialHand()}`);
   }
 
-  displayCards(player, dealer) {
+  static displayCards(player, dealer) {
     console.log('');
     console.log(`Your Cards: ${MessageCenter.prettyPrint(player.hand, ',', 'and')}`);
     if (dealer.hidden) {
@@ -287,7 +321,7 @@ class MessageCenter {
     }
   }
 
-  displayDealerCards(dealer) {
+  static displayDealerCards(dealer) {
     console.log('');
     if (dealer.hidden) {
       console.log(`Dealer Cards: ${dealer.getInitialHand()}`);
@@ -308,33 +342,48 @@ class MessageCenter {
     console.log('');
   }
 
-  displayDealerContinueReason() {
+  static displayDealerContinueReason() {
     console.log("Dealer's cards are less than 17. Hitting ...");
   }
 
-  displayDealerStoppingReason() {
+  static displayDealerStoppingReason() {
     console.log("Dealer's cards are greater than or equal to 17. Staying ...");
   }
 
-  displayPlayerTurn() {
+  static displayPlayerTurn() {
     console.log("+---------------+");
     console.log("| PLAYER'S TURN |");
     console.log("+---------------+");
   }
 
-  displayDealerTurn() {
+  static displayDealerTurn() {
     console.log("+---------------+");
     console.log("| DEALER'S TURN |");
     console.log("+---------------+");
   }
 
-  displayFinalScore() {
+  static displayFinalScore() {
     console.log("+-------------+");
     console.log("| FINAL SCORE |");
     console.log("+-------------+");
   }
 
-  
+  static displaySpaces(newlines=4) {
+    console.log('\n'.repeat(newlines));
+  } 
+
+  static displayChips(player) {
+    console.log(`You have ${player.chips} chips.`);
+    console.log('');
+  }
+
+  static outOfCards() {
+    console.log("Out of cards. Reshuffling ...");
+  }
+
+  static pressReturnToContinue() {
+    readline.question("Press return to continue ...");
+  }
 
   static prettyPrint(arr, delimeter='', conjunction='') {
     let output = '';
@@ -364,16 +413,62 @@ class TwentyOneGame {
   }
 
   start() {
+    let play = true;
+    while (play) {
+      console.clear();
+      MessageCenter.displayWelcomeMessage();
+      MessageCenter.displayPlayerTurn();
+      this.dealCards();
+      MessageCenter.displayInitialCards(this.player, this.dealer);
+      this.messages.displayInitialScoreBoard(this.player.getScore());
+      MessageCenter.displayChips(this.player);
+      this.playerTurn();
+      if (this.player.bust) {
+        this.playerBusts();
+        if (this.playerIsBroke()) {
+          play = false;
+          console.log("You're broke! Stopping game ...");
+          break;
+        }
+        play = this.playAgain();
+        continue;
+      }
+      this.dealerTurn();
+      if (this.dealer.bust) {
+        this.dealerBusts();
+        play = this.playAgain();
+        continue;
+      }
+      this.displayResult();
+      this.player.reset();
+      this.dealer.reset();
+      play = this.playAgain();
+    }
+    MessageCenter.displayGoodbyeMessage();
+  }
+
+  playerIsBroke() {
+    return this.player.isBroke();
+  }
+
+  playerBusts() {
     console.clear();
-    this.messages.displayWelcomeMessage();
-    this.messages.displayPlayerTurn();
-    this.dealCards();
-    this.messages.displayInitialCards(this.player, this.dealer);
-    this.messages.displayInitialScoreBoard(this.player.getScore());
-    this.playerTurn();
-    this.dealerTurn();
-    this.displayResult();
-    this.messages.displayGoodbyeMessage();
+    MessageCenter.displaySpaces(2);
+    console.log(">>> You bust! <<<")
+    this.dealer.reveal();
+    MessageCenter.displayCards(this.player, this.dealer);
+    this.messages.displayUpdatedScoreBoard(this.player.getScore(), this.dealer.getScore());
+    this.player.reset();
+    this.dealer.reset();
+    this.player.decrementChips();
+    MessageCenter.displayChips(this.player);
+  }
+
+  dealerBusts() {
+    this.player.reset();
+    this.dealer.reset();
+    this.player.incrementChips();
+    MessageCenter.displayChips(this.player);
   }
 
   dealCards() {
@@ -396,13 +491,13 @@ class TwentyOneGame {
       if (hit === 'y') {
         console.clear();
         console.log('');
-        this.messages.displayPlayerTurn();
+        MessageCenter.displayPlayerTurn();
         this.dealer.deal(this.player);
         this.player.updateScore(this.player.getLastDealtCard());
-        this.messages.displayCards(this.player, this.dealer);
+        MessageCenter.displayCards(this.player, this.dealer);
         this.messages.displayInitialScoreBoard(this.player.getScore());
-        if (this.player.isBusted()) {
-          console.log("You bust!");
+        this.player.isBusted();
+        if (this.player.bust) {
           break;
         }
       } else if (hit === 'n') {
@@ -415,42 +510,66 @@ class TwentyOneGame {
   }
 
   dealerTurn() {
+    let first = true;
     console.clear();
-    this.messages.displayDealerTurn()
+    console.log('');
+    MessageCenter.displayDealerTurn()
     this.dealer.reveal();
     while (true) {
-      this.messages.displayDealerCards(this.dealer);
+      if (!first) {MessageCenter.displaySpaces(3)};
+      MessageCenter.displayCards(this.player, this.dealer);
       this.messages.displayUpdatedScoreBoard(this.player.getFinalScore(), this.dealer.getScore());
+      this.dealer.isBusted();
       if (this.dealer.getScore()[0] >= 17 || this.dealer.getScore()[1] >= 17) {
-        this.messages.displayDealerStoppingReason();
         this.dealer.updateFinalScore();
+        if (this.dealer.bust) {
+          console.log("Dealer busts!");
+        } else {
+          MessageCenter.displayDealerStoppingReason();
+        }
         break;
       } else {
-        this.messages.displayDealerContinueReason();
+        MessageCenter.displayDealerContinueReason();
         this.dealer.deal(this.dealer);
         this.dealer.updateScore(this.dealer.getLastDealtCard());
       }
+      MessageCenter.pressReturnToContinue();
+      console.clear();
+      first = false;
     }
   }
 
   displayResult() {
-    while (true) {
-      let answer = readline.question("Confirm accuracy by pressing (y) to continue: ");
-      if (answer === 'y') {
-        break;
-      } else {
-        console.log("Please press (y) to confirm.");
-      }
-    }
+    MessageCenter.pressReturnToContinue();
     console.clear();
-    this.messages.displayFinalScore();
+    console.log('');
+    MessageCenter.displayFinalScore();
+    MessageCenter.displayCards(this.player, this.dealer);
     this.messages.displayUpdatedScoreBoard(this.player.getFinalScore(), this.dealer.getFinalScore());
     if (this.player.getFinalScore() > this.dealer.getFinalScore()) {
       console.log("Player Wins!");
+      this.player.incrementChips();
+      MessageCenter.displayChips(this.player);
     } else if (this.player.getFinalScore() < this.dealer.getFinalScore()) {
       console.log("Dealer Wins!");
+      this.player.decrementChips();
+      MessageCenter.displayChips(this.player);
     } else {
       console.log("It's a Tie!");
+      MessageCenter.displayChips(this.player);
+    }
+  }
+
+  playAgain() {
+    while (true) {
+      let again = readline.question("Play again (y/n)? ");
+      if (again === 'y') {
+        return true;
+      } else if (again === 'n') {
+        return false;
+      } else {
+        console.log("Invalid response. Please choose between (y/n).");
+      }
     }
   }
 }
