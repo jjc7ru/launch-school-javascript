@@ -385,9 +385,9 @@ class TwentyOneGame {
         break;
       } else if (this.dealer.getScore() >= 17 && this.dealer.getScore() <= 21) {
         this.player.showChips();
-        console.log(`Dealer's score is greater than 17 and is less than or 
-                     equal to 21. Stopping ...`);
+        console.log("Dealer's score is greater than 17 and is less than or equal to 21. Stopping ...");
         console.log('');
+        readline.question("Press Return to Continue");
         break;
       } else {
         this.player.showChips();
