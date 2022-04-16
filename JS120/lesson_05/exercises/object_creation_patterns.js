@@ -1,4 +1,4 @@
-// (1) Implement an ancestors method that returns the prototype chain 
+// (1) <RE> Implement an ancestors method that returns the prototype chain 
 //     (ancestors) of a calling object as an array of object names. Here's an example output:
 
 // name property added to make objects easier to identify
