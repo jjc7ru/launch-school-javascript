@@ -65,7 +65,13 @@ class Diamond {
   };
 }
 
-console.log(Diamond.makeDiamond('F'));
+
+class Robot {
+  constructor() {
+  }
+
+  name() {};
+}
 
 module.exports = {
   Diamond,
