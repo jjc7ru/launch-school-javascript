@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="first.css">
+  <title>Document</title>
+</head>
+<body>
+  <form action="#">
+    <fieldset>
+      <dl>
+        <dt>
+          <label for="fn">First Name</label>
+        </dt>
+        <dd>
+          <input type="text" name="fn" id="fn" placeholder="John" required>
+        </dd>
+    
+        <dt>
+          <label for="ln">Last Name</label>
+        </dt>
+        <dd>
+          <input type="text" name="ln" id="ln" placeholder="Doe" required>
+        </dd>
+    
+        <dt>
+          <label for="email">Email Address</label>
+        </dt>
+        <dd>
+          <input type="email" name="email" id="email" placeholder="example@example.com" autocomplete="off" autocapitalize="off" required>
+        </dd>
+    
+        <dt>
+          <label for="phone_type">Phone Type</label>
+        </dt>
+        <dd>
+          <select name="phone_type" id="phone_type">
+            <option value="home" selected>Home</option>
+            <option value="business">Business</option>
+            <option value="mobile">Mobile</option>
+          </select>
+        </dd>
+        <dt>
+          <label for="phone">Phone Number</label>
+        </dt>
+        <dd>
+          <input type="tel" name="phone" id="phone" placeholder="###-###-####" required>
+        </dd>
+        <dt>
+          <label for="message">Message</label>
+        </dt>
+        <dd>
+          <textarea name="message" id="message" cols="80" rows="6" placeholder="Type your message here"></textarea>
+        </dd>
+      </dl>
+      
+      <input type="submit" value="Send">      
+    </fieldset>
+  </form>
+</body>
+</html>

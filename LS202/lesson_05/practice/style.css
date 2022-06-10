@@ -1,0 +1,22 @@
+header, body {
+  font-family: "Libre Baskerville";
+  background-image: url(https://preview.colorlib.com/theme/wedding2/images/xBackground_Circle.png.pagespeed.ic.ypagTo5i3K.jpg);
+}
+
+nav ul {
+  list-style-type: none;
+  font-size: 0;
+  padding-left: 0;
+  width: 100%;
+}
+
+nav li {
+  display: inline-block;
+  font-size: 1.25rem;
+  text-align: center;
+  width: 25%;
+}
+
+.name {
+  text-align: center;
+}

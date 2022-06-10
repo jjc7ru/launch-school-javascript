@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="third.css">
+  <title>Document</title>
+</head>
+<body>
+  <form action="post">
+    <fieldset>
+      <dl>
+        <dt>
+          <label for="movie">Movie</label>
+        </dt>
+        <dd>
+          <select name="movie" id="movie" multiple size="4">
+            <option value="">Looper</option>
+            <option value="">Frozen</option>
+            <option value="">Tommy Boy</option>
+            <option value="" selected>Alien</option>
+          </select>
+        </dd>
+        <dt>
+          <label for="rate">Rating</label>
+        </dt>
+        <dd>
+          <input type="number" name="rate" id="rate" min="1" max="5">
+        </dd>
+        <dd class="favorites">
+          <input type="checkbox" name="fav" id="fav">
+        </dd>
+        <dt class="favorites">
+          <label for="fav">Add to my favorites</label>
+        </dt>
+      </dl>
+      <button>Rate movie</button>
+    </fieldset>
+  </form>
+</body>
+</html>
