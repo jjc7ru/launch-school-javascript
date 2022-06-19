@@ -1,0 +1,27 @@
+doctype html 
+
+html(lang="en")
+  head 
+    meta(charset="UTF-8")
+    meta(http-equiv="X-UA-Compatible", content="IE=edge")
+    meta(name="viewport", content="width=device-width, initial-scale=1.0")
+    title Document
+  
+  body
+    ul 
+      if errorMessages && errorMessages.length > 0
+        each message in errorMessages
+          li #{message}
+    ul 
+      each dog in dogs 
+        li #{dog.name}
+
+    form(action="/", method="post")
+      formset 
+        dl 
+          dt 
+            label(for="somethingElse") Name: 
+          dd
+            input(type="text" name="name")
+      formset 
+        input(type="submit", value="Save")

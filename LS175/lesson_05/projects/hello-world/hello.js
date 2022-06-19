@@ -39,11 +39,14 @@ app.locals.currentPathClass = (path, currentPath) => {
   return path === currentPath ? "current" : "";
 };
 
+app.get("/", (req, res) => {
+  res.redirect("/english")
+});
+
 app.get("/:language", (req, res, next) => {
   const language = req.params.language;
   const languageCode = LANGUAGE_CODES[language];
   if (!languageCode) {
-    //res.status(404).send(`Language not supported: ${language}`);
     next(new Error(`Language not supported: ${language}`));
   }
   res.render(`hello-world-${language}`, {
@@ -52,34 +55,6 @@ app.get("/:language", (req, res, next) => {
     lang: languageCode,
   })
 });
-
-/*
-const showEnglishView = (req, res) => {
-  res.render("hello-world-english", {
-    countries: COUNTRY_DATA,
-    currentPath: req.path,
-    lang: 'en-US',
-  });
-}
-app.get("/", showEnglishView);
-app.get("/english", showEnglishView);
-
-app.get("/french", (req, res) => {
-  res.render("hello-world-french", {
-    countries: COUNTRY_DATA,
-    currentPath: req.path,
-    lang: 'fr-FR',
-  });
-});
-
-app.get("/serbian", (req, res) => {
-  res.render("hello-world-serbian", {
-    countries: COUNTRY_DATA,
-    currentPath: req.path,
-    lang: 'sr-Cyrl-rs',
-  });
-});
-*/
 
 app.use((err, req, res, _next) => {
   console.log(err);

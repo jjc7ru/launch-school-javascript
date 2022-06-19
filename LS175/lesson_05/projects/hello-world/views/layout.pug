@@ -12,11 +12,10 @@ html
       ul 
         each country in countries
           li 
-            a(href=`${country.path}`, class=currentPathClass(`${country.path}`, currentPath))
+            a(href=country.path, class=currentPathClass(country.path, currentPath))
               img.flag(src=`/images/${country.flag}`
-                       alt=`${country.alt}`
-                       title=`${country.title}`)
-
+                       alt=country.alt
+                       title=country.title)
     header 
       block greeting
         h1 Hello World! 

@@ -1,9 +1,14 @@
 const express = require("express");
 const morgan = require("morgan");
 const { body, validationResult } = require("express-validator");
-const app = express();
+const session = require("express-session");
+const store = require("connect-loki");
+const flash = require("express-flash");
 
-let contactData = [
+const app = express();
+const LokiStore = store(session);
+
+const contactData = [
   {
     firstName: "Mike",
     lastName: "Jones",
@@ -42,12 +47,57 @@ const sortContacts = contacts => {
   });
 };
 
+const validateName = (name, whichName) => {
+  return body(name)
+    .trim()
+    .isLength({ min: 1 })
+    .withMessage(`${whichName} name is required.`)
+    .bail()
+    .isLength({ max: 25 })
+    .withMessage(`${whichName} name is too long. Maximum length is 25 characters.`)
+    .isAlpha()
+    .withMessage(`${whichName} name contains invalid characters. The name must be alphabetic`)
+};
+
+const clone = object => {
+  return JSON.parse(JSON.stringify(object));
+}
+
 app.set("views", "./views");
 app.set("view engine", "pug");
 
 app.use(express.static("public"));
 app.use(express.urlencoded({ extended: false }));
 app.use(morgan("common"));
+app.use(flash());
+
+app.use(session({
+  cookie: {
+    httpOnly: true,
+    maxAge: 31 * 24 * 60 * 60 * 1000, //31 days in milliseconds
+    path: "/",
+    secure: false,
+  },
+  name: "launch-school-contacts-manager-session-id",
+  resave: false,
+  saveUninitialized: true,
+  secret: "this is not very secure",
+  store: new LokiStore({}),
+}));
+
+app.use((req, res, next) => {
+  if (!("contactData" in req.session)) {
+    req.session.contactData = clone(contactData);
+  }
+
+  next();
+})
+
+app.use((req, res, next) => {
+  res.locals.flash = req.session.flash;
+  delete req.session.flash;
+  next();
+});
 
 app.get("/", (req, res) => {
   res.redirect("/contacts");
@@ -55,7 +105,7 @@ app.get("/", (req, res) => {
 
 app.get("/contacts", (req, res) => {
   res.render("contacts", {
-    contacts: sortContacts(contactData),
+    contacts: sortContacts(req.session.contactData),
   })
 });
 
@@ -65,25 +115,8 @@ app.get("/contacts/new", (req, res) => {
 
 app.post("/contacts/new",
   [
-    body("firstName")
-      .trim()
-      .isLength({ min: 1 })
-      .withMessage("First name is required.")
-      .bail()
-      .isLength({ max: 25 })
-      .withMessage("First name is too long. Maximum length is 25 characters.")
-      .isAlpha()
-      .withMessage("First name contains invalid characters. The name must be alphabetic."),
-
-    body("lastName")
-      .trim()
-      .isLength({ min: 1 })
-      .withMessage("Last name is required.")
-      .bail()
-      .isLength({ max: 25 })
-      .withMessage("Last name is too long. Maximum length is 25 characters.")
-      .isAlpha()
-      .withMessage("Last name contains invalid characters. The name must be alphabetic."),
+    validateName("firstName", "First"),
+    validateName("lastName", "Last"),
 
     body("phoneNumber")
       .trim()
@@ -96,8 +129,11 @@ app.post("/contacts/new",
   (req, res, next) => {
     let errors = validationResult(req);
     if (!errors.isEmpty()) {
+      errors.array().forEach(error => req.flash("error", error.msg));
+
       res.render("new-contact", {
-        errorMessages: errors.array().map(error => error.msg),
+        flash: req.flash(),
+        // errorMessages: errors.array().map(error => error.msg),
         firstName: req.body.firstName,
         lastName: req.body.lastName,
         phoneNumber: req.body.phoneNumber,
@@ -107,12 +143,13 @@ app.post("/contacts/new",
     }
   },
   (req, res) => {
-    contactData.push({
+    req.session.contactData.push({
       firstName: req.body.firstName,
       lastName: req.body.lastName,
       phoneNumber: req.body.phoneNumber,
     });
-
+    
+    req.flash("success", "New contact added to list!");
     res.redirect("/contacts");
   }
 );
