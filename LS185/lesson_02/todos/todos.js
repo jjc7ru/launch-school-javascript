@@ -6,6 +6,7 @@ const { body, validationResult } = require("express-validator");
 const store = require("connect-loki");
 const PgPersistence = require("./lib/pg-persistence");
 const catchError = require("./lib/catch-error");
+const { dbQuery } = require("./lib/db-query");
 
 const app = express();
 const host = "localhost";
@@ -80,22 +81,27 @@ app.post("/users/signout", (req, res) => {
 });
 
 // Interact with sign-in page - check username and password
-app.post("/users/signin", (req, res) => {
-  let username = req.body.username.trim();
-  let password = req.body.password;
-
-  if (username !== 'admin' || password !== 'secret') {
-    req.flash("error", "Invalid credentials.");
-    res.render("signin", {
-      flash: req.flash(),
-    })
-  } else {
-    req.session.username = username;
-    req.session.signedIn = true;
-    req.flash("success", "Welcome!");
-    res.redirect("/lists");
-  }
-});
+app.post("/users/signin", 
+  catchError(async (req, res) => {
+    let username = req.body.username.trim();
+    let password = req.body.password;
+    
+    let authenticated = res.locals.store.authenticate(username, password);
+    if (await !authenticated) {
+      req.flash("error", "Invalid credentials.");
+      res.render("signin", {
+        flash: req.flash(),
+        username: req.body.username,
+      })
+    } else {
+      let session = req.session;
+      session.username = username;
+      session.signedIn = true;
+      req.flash("success", "Welcome!");
+      res.redirect("/lists");
+    }
+  })
+);
 
 // Render the list of todo lists
 app.get("/lists", 

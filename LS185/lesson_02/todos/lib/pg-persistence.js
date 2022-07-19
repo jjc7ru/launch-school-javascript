@@ -1,5 +1,5 @@
 const { dbQuery } = require("./db-query");
-const { reverse } = require("./seed-data");
+const bcrypt = require("bcrypt");
 
 module.exports = class PgPersistence {
 
@@ -151,7 +151,18 @@ module.exports = class PgPersistence {
     let result = await dbQuery(TOGGLE_DONE, todoListId, todoId);
     return result.rowCount > 0;
   }
-  
+
+  // Authenticate user by fetching username and password from database
+  async authenticate(username, password) {
+    const FIND_HASHED_PASSWORD = `SELECT password FROM users
+      WHERE username = $1`;
+
+    let result =  await dbQuery(FIND_HASHED_PASSWORD, username);
+    if (result.rowCount === 0) return false;
+    
+    return bcrypt.compare(password, result.rows[0].password);
+  }
+
   // Returns a new list of todo lists partitioned by completion status.
   _partitionTodoLists(todoLists) {
     let undone = [];
