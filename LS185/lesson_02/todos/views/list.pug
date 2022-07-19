@@ -31,7 +31,7 @@ block main
           else 
             h3= todo.title
 
-    if signeIn
+    if signedIn
       form(action=`/lists/${todoList.id}/todos` method="post")
         dl
           dt
