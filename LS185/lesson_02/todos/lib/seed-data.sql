@@ -13,8 +13,3 @@ INSERT INTO todos (title, done, todolist_id)
          ('Buy milk', true, 2),
          ('Study for Launch School', true, 2),
          ('Go to Libby''s birthday party', false, 4);
-
-INSERT INTO users (username, password)
-  VALUES ('admin', 'secret'),
-         ('developer', 'letmein'),
-         ('somebody', 'knock-knock');
