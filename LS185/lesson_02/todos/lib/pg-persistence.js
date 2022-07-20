@@ -133,11 +133,13 @@ module.exports = class PgPersistence {
   // Returns a copy of the list of todo lists sorted by completion status and
   // title (case-insensitive).
   async sortedTodoLists() {
-    let ALL_TODOLISTS = `SELECT * 
+    let ALL_TODOLISTS = `
+      SELECT * 
       FROM todolists 
       WHERE username = $1 
       ORDER BY LOWER(title) ASC`;
-    let FIND_TODOS = `SELECT * 
+    let FIND_TODOS = `
+      SELECT * 
       FROM todos 
       WHERE todolist_id = $1
       ORDER BY title ASC`;
@@ -184,7 +186,7 @@ module.exports = class PgPersistence {
 
     let result =  await dbQuery(FIND_HASHED_PASSWORD, username);
     if (result.rowCount === 0) return false;
-    
+
     return bcrypt.compare(password, result.rows[0].password);
   }
 

@@ -52,8 +52,7 @@ app.use((req, res, next) => {
 // Checks whether the user is signed-in or not.
 const requiresAuthentication = (req, res, next) => {
   if (!res.locals.signedIn) {
-    console.log("Unauthorized");
-    res.status(401).send("Unauthorized.");
+    res.status(302).redirect("/users/signin");
   } else {
     next();
   }
@@ -85,7 +84,7 @@ app.post("/users/signin",
     let username = req.body.username.trim();
     let password = req.body.password;
     
-    let authenticated = res.locals.store.authenticate(username, password);
+    let authenticated = await res.locals.store.authenticate(username, password);
     if (await !authenticated) {
       req.flash("error", "Invalid credentials.");
       res.render("signin", {
@@ -103,7 +102,8 @@ app.post("/users/signin",
 );
 
 // Render the list of todo lists
-app.get("/lists", 
+app.get("/lists",
+  requiresAuthentication,
   catchError(async (req, res) => {
     let store = res.locals.store;
     let todoLists = await store.sortedTodoLists();
@@ -171,7 +171,8 @@ app.post("/lists",
 );
 
 // Render individual todo list and its todos
-app.get("/lists/:todoListId", 
+app.get("/lists/:todoListId",
+  requiresAuthentication,
   catchError(async (req, res) => {
     let todoListId = req.params.todoListId;
     let todoList = await res.locals.store.loadTodoList(+todoListId);
