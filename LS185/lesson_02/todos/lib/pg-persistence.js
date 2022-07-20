@@ -123,7 +123,8 @@ module.exports = class PgPersistence {
   // `undefined` if either the todo list or the todo is not found. Note that
   // both IDs must be numeric.
   async loadTodo(todoListId, todoId) {
-    let FIND_TODO = `SELECT * 
+    let FIND_TODO = `
+      SELECT * 
       FROM todos 
       WHERE todolist_id = $1 AND id = $2 AND username = $3`;
     let result = await dbQuery(FIND_TODO, todoListId, todoId, this.username);
@@ -141,19 +142,22 @@ module.exports = class PgPersistence {
     let FIND_TODOS = `
       SELECT * 
       FROM todos 
-      WHERE todolist_id = $1
-      ORDER BY title ASC`;
+      WHERE username = $1`;
     
-    let result = await dbQuery(ALL_TODOLISTS, this.username);
-    let todoLists = result.rows;
+    let resultTodoLists = dbQuery(ALL_TODOLISTS, this.username);
+    let resultTodos = dbQuery(FIND_TODOS, this.username);
+    let resultBoth = await Promise.all([resultTodoLists, resultTodos]);
 
-    for (let index = 0; index < todoLists.length; ++index) {
-      let todoList = todoLists[index];
-      let todos = await dbQuery(FIND_TODOS, todoList.id);
-      todoList.todos = todos.rows;
-    }
+    let allTodoLists = resultBoth[0].rows;
+    let allTodos = resultBoth[1].rows;
+    if (!allTodoLists || !allTodos) return undefined;
 
-    return this._partitionTodoLists(todoLists);
+    allTodoLists.forEach(todoList => {
+      todoList.todos = allTodos.filter(todo => {
+        return todoList.id === todo.todolist_id;
+      });
+    });
+    return this._partitionTodoLists(allTodoLists);
   }
 
   // Returns a copy of the list of todos in the indicated todo list by sorted by
